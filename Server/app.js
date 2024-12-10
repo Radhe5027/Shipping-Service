@@ -1,35 +1,52 @@
-require("dotenv").config();
-const express = require("express"); // pass the express lib power to express variable
-const roles = require("./model/init-models");
-const shipment_locations = require("./model/init-models");
-const shipments = require("./model/init-models");
-const users = require("./model/init-models");
+// app.js
+require("dotenv").config(); // Load environment variables from .env file
+require("./utils/scheduler");
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const { sequelize, models } = require("./database/db"); // Import sequelize and models
+const { users, roles, shipments, shipment_locations } =
+  require("./database/db").models;
 
-//Creating express object
-const app = express(); // so that app. can acesses all the methods of the express
+const userRoutes = require("./routes/users");
+const shippingRoutes = require("./routes/shipping");
+const locationRoutes = require("./routes/location");
 
-// Handling GET request
+// Create express app
+const app = express();
+
+const cors = require("cors");
+//Enable CORS
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+
+// Handle preflight requests
+app.options("*", cors());
+
+// Middleware setup
+app.use(express.urlencoded({ extended: true })); // To parse URL-encoded data
+const bodyParser = require("body-parser");
+app.use(express.json()); // To parse JSON bodies
+app.use(cookieParser());
+
+// Simple GET route to test if server is running
 app.get("/", (req, res) => {
-  res.send("A simple Node App is " + "running on this server");
-  res.end();
+  res.send("A simple Node App is running on this server");
 });
 
-// // Test the database connection
-// (async () => {
-//   try {
-//     await sequelize.authenticate();
-//     console.log("Database connected successfully.");
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+  next();
+});
 
-//     // Sync models if necessary (optional in production)
-//     await sequelize.sync();
-//     console.log("Models are synchronized.");
-//   } catch (error) {
-//     console.error("Unable to connect to the database:", error);
-//   }
-// })();
-
-//port number
-const PORT = process.env.PORT || 3000;
+// Use all routes from routes.js
+app.use("/", userRoutes); // it will apply all the routes defined in routes.js
+app.use("/", shippingRoutes);
+app.use("/", locationRoutes);
 
 // Server setup
-app.listen(PORT, console.log(`Server started on port ${PORT}`));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server started on port ${PORT}`));

@@ -25,4 +25,4 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-models.exports = { verifyToken };
+module.exports = { verifyToken };

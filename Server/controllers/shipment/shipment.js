@@ -50,7 +50,37 @@ exports.createShipment = async (req, res) => {
 
 exports.getAllShipments = async (req, res) => {
   try {
-    const shipmentsList = await shipments.findAll();
+    const { id: userId, role_id } = req.user; // Assuming the user is attached to the request object after `verifyToken` middleware
+
+    // If the user is an admin (role_id = 2), fetch all shipments
+    if (role_id === 2) {
+      const shipmentsList = await shipments.findAll();
+      return res.status(200).json({ shipments: shipmentsList });
+    }
+
+    // If the user is not an admin, fetch shipments specific to their `sender_id`
+    const { sender_id } = req.query; // Get sender_id from the query parameter
+
+    if (sender_id && sender_id !== userId) {
+      return res
+        .status(403)
+        .json({ error: "You can only view your own shipments." });
+    }
+
+    // Fetch shipments for the user based on `sender_id`
+    const shipmentsList = await shipments.findAll({
+      where: {
+        sender_id: userId, // Only return shipments belonging to the logged-in user
+      },
+    });
+
+    // Send the shipments data in the response
+    if (shipmentsList.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No shipments found. Please create a shipment!" });
+    }
+
     res.status(200).json({ shipments: shipmentsList });
   } catch (error) {
     console.error("Error fetching shipments:", error.message);

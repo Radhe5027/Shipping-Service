@@ -1,6 +1,3 @@
-const verifyAdmin = require("../middleware/verifyAdmin");
-const verifyToken = require("../middleware/verifyToken");
-
 const express = require("express");
 const router = express.Router();
 const {
@@ -10,16 +7,19 @@ const {
   updateShipmentStatus,
   deleteShipment,
 } = require("../controllers/shipment/shipment");
+const { verifyToken } = require("../middleware/verifyToken");
+const { verifyAdmin } = require("../middleware/verifyAdmin");
 
 // Routes
-router.post("/api/shipments", verifyToken, createShipment);
-router.get("/api/shipments", verifyToken, getAllShipments);
-router.get("/api/shipments/:tracking_id", verifyToken, getShipmentByTrackingId);
+router.post("/api/shipping", verifyToken, createShipment); // POST /api/shipments
+router.get("/api/shipping", verifyToken, getAllShipments); // GET /api/shipments
+router.get("/api/shipping/:tracking_id", verifyToken, getShipmentByTrackingId); // GET /api/shipments/:tracking_id
 router.put(
-  "/api/shipments/:id/status",
+  "/api/shipping/:id/status",
   verifyToken,
   verifyAdmin,
   updateShipmentStatus
-);
-router.delete("/api/shipments/:id", verifyToken, deleteShipment);
+); // PUT /api/shipments/:id/status
+router.delete("/:id", verifyToken, deleteShipment); // DELETE /api/shipments/:id
+
 module.exports = router;
