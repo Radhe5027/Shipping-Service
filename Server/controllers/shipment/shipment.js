@@ -1,4 +1,5 @@
-const { shipments, users } = require("../../database/db").models;
+const { shipments, users, shipment_locations } =
+  require("../../database/db").models;
 const bcrypt = require("bcryptjs"); // For password hashing
 const jwt = require("jsonwebtoken");
 
@@ -92,15 +93,36 @@ exports.getShipmentByTrackingId = async (req, res) => {
   try {
     const { tracking_id } = req.params;
 
+    // Fetch shipment details
     const shipment = await shipments.findOne({
       where: { tracking_id },
     });
 
     if (!shipment) {
-      return res.status(404).json({ error: "Shipment not found" });
+      return res
+        .status(404)
+        .json({ error: "Kindly Enter Correct Shipping Id" });
     }
 
-    res.status(200).json({ shipment });
+    // Fetch shipment locations
+    const locations = await shipment_locations.findAll({
+      where: { shipment_id: shipment.id }, // Use shipment.id as the foreign key
+      attributes: ["latitude", "longitude"], // Only select required fields
+    });
+
+    // Format response
+    res.status(200).json({
+      shipment: {
+        tracking_id: shipment.tracking_id,
+        reciver_name: shipment.reciver_name,
+        status: shipment.status,
+        reciver_address: shipment.reciver_address,
+      },
+      locations: locations.map((location) => ({
+        latitude: parseFloat(location.latitude),
+        longitude: parseFloat(location.longitude),
+      })),
+    });
   } catch (error) {
     console.error("Error fetching shipment by tracking ID:", error.message);
     res.status(500).json({ error: "Internal Server Error" });

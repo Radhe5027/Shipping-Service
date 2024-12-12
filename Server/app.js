@@ -1,6 +1,5 @@
 // app.js
 require("dotenv").config(); // Load environment variables from .env file
-require("./utils/scheduler");
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const { sequelize, models } = require("./database/db"); // Import sequelize and models
