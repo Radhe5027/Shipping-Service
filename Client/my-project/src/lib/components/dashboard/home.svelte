@@ -13,16 +13,13 @@
 
     <div class="boxes">
       <div class="box box-1">
-        <h3>24x7 Support</h3>
-        <p>Our support team is available round the clock for any issues.</p>
+        
       </div>
       <div class="box box-2">
-        <h3>5-Star Rated</h3>
-        <p>We pride ourselves on being the top-rated service provider in the industry.</p>
+        
       </div>
       <div class="box box-3">
-        <h3>Fast Delivery</h3>
-        <p>We guarantee fast delivery times with complete reliability.</p>
+        
       </div>
     </div>
   </section>
@@ -82,29 +79,19 @@
   .box {
     border: 2px solid #ddd;
     padding: 20px;
+    height: 90px;
     flex: 1;
     text-align: center;
     border-radius: 8px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     position: relative;
     color: white; /* Text color for contrast */
-    background-size: cover;
+    background-size: contain;
+    background-repeat: no-repeat;
     background-position: center;
   }
 
-  .box h3 {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 2; /* Ensure the text is above the image */
-  }
-
-  .box p {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    z-index: 2; /* Ensure the text is above the image */
-  }
+  
 
   .processes-section {
     text-align: center;
@@ -158,6 +145,6 @@
   }
 
   .box-3 {
-    background-image: url('src/assets/delivery-service-with-masks-concept_23-2148509518.jpg');
+    background-image: url('src/assets/fast-free-delivery-logo_1308-49056.avif');
   }
 </style>
