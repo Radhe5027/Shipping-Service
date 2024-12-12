@@ -9,10 +9,25 @@ exports.createShipment = async (req, res) => {
   try {
     console.log("Incoming request body:", req.body); // Debug the incoming request
 
-    const { sender_id, reciver_name, reciver_address, status } = req.body;
+    const {
+      sender_id,
+      reciver_name,
+      reciver_address,
+      status,
+      sender_address,
+      sender_latitude,
+      sender_longitude,
+    } = req.body;
 
     // Validate required fields
-    if (!sender_id || !reciver_name || !reciver_address) {
+    if (
+      !sender_id ||
+      !reciver_name ||
+      !reciver_address ||
+      !sender_address ||
+      !sender_latitude ||
+      !sender_longitude
+    ) {
       console.log("Validation failed: Missing fields");
       return res.status(400).json({ error: "All fields are required" });
     }
@@ -35,6 +50,9 @@ exports.createShipment = async (req, res) => {
       reciver_address,
       status: status || "Placed", // Default to "Placed" if no status provided
       tracking_id,
+      sender_address,
+      sender_latitude,
+      sender_longitude,
     });
 
     // Respond with success message and shipment data
@@ -117,6 +135,9 @@ exports.getShipmentByTrackingId = async (req, res) => {
         reciver_name: shipment.reciver_name,
         status: shipment.status,
         reciver_address: shipment.reciver_address,
+        sender_address: shipment.sender_address,
+        sender_latitude: shipment.sender_latitude,
+        sender_longitude: shipment.sender_longitude,
       },
       locations: locations.map((location) => ({
         latitude: parseFloat(location.latitude),

@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import {jwtDecode} from "jwt-decode";
+  import { jwtDecode } from "jwt-decode";
   import Header from "../header/header.svelte";
 
   let shipmentData = {
@@ -8,6 +8,9 @@
     reciver_address: "",
     status: "Placed",
     tracking_id: `SHIP-${Date.now()}`,
+    sender_address: "",
+    sender_latitude: "",
+    sender_longitude: "",
   };
 
   let locationData = {
@@ -102,6 +105,9 @@
         reciver_address: "",
         status: "Placed",
         tracking_id: `SHIP-${Date.now()}`,
+        sender_address: "",
+        sender_latitude: "",
+        sender_longitude: "",
       };
 
       locationData = {
@@ -130,6 +136,18 @@
     <label>
       Receiver Address:
       <textarea bind:value={shipmentData.reciver_address} required></textarea>
+    </label>
+    <label>
+      Sender Address:
+      <textarea bind:value = {shipmentData.sender_address} required></textarea>
+    </label>
+    <label>
+      Sender Latitude:
+      <textarea bind:value = {shipmentData.sender_latitude} required></textarea>
+    </label>
+    <label>
+      Sender Longitude:
+      <textarea bind:value = {shipmentData.sender_longitude} required></textarea>
     </label>
     <label>
       Latitude:

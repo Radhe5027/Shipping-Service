@@ -22,6 +22,18 @@ module.exports = function (sequelize, DataTypes) {
           key: "id",
         },
       },
+      sender_address: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+      sender_latitude: {
+        type: DataTypes.DECIMAL,
+        allowNull: false,
+      },
+      sender_longitude: {
+        type: DataTypes.DECIMAL,
+        allowNull: false,
+      },
       reciver_name: {
         type: DataTypes.STRING(100),
         allowNull: false,

@@ -8,7 +8,7 @@ const { verifyToken } = require("../middleware/verifyToken");
 
 // Add or update shipment location
 router.post(
-  "/api/shipments/:id/location",
+  "/api/shipping/:id/location",
   verifyToken,
   addOrUpdateShipmentLocation
 );

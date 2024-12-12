@@ -1,7 +1,6 @@
 // app.js
 require("dotenv").config(); // Load environment variables from .env file
 const express = require("express");
-const cookieParser = require("cookie-parser");
 const { sequelize, models } = require("./database/db"); // Import sequelize and models
 const { users, roles, shipments, shipment_locations } =
   require("./database/db").models;
@@ -27,9 +26,7 @@ app.options("*", cors());
 
 // Middleware setup
 app.use(express.urlencoded({ extended: true })); // To parse URL-encoded data
-const bodyParser = require("body-parser");
 app.use(express.json()); // To parse JSON bodies
-app.use(cookieParser());
 
 // Simple GET route to test if server is running
 app.get("/", (req, res) => {

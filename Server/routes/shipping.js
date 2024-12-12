@@ -20,6 +20,6 @@ router.put(
   verifyAdmin,
   updateShipmentStatus
 ); // PUT /api/shipments/:id/status
-router.delete("/:id", verifyToken, deleteShipment); // DELETE /api/shipments/:id
+router.delete("/api/shipping/:id", verifyToken, deleteShipment); // DELETE /api/shipments/:id
 
 module.exports = router;
