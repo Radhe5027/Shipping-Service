@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { tick } from 'svelte';
+  import Header from '../header/header.svelte';
 
   let trackingId = '';
   let shipmentDetails = null;
@@ -54,14 +55,26 @@
       return;
     }
 
+    if (!shipmentDetails || !shipmentLocations.length) {
+    console.error("Shipment details or locations are missing.");
+    return;
+  }
+
     const senderLatLng = {
       lat: parseFloat(shipmentDetails.sender_latitude),
       lng: parseFloat(shipmentDetails.sender_longitude),
     };
     const receiverLatLng = {
-      lat: shipmentLocations[0].latitude,
-      lng: shipmentLocations[0].longitude,
-    };
+    lat: parseFloat(shipmentLocations[0]?.latitude || 0),
+    lng: parseFloat(shipmentLocations[0]?.longitude || 0),
+  };
+
+  if (senderLatLng.lat === 0 && senderLatLng.lng === 0) {
+    console.warn("Sender coordinates are invalid or missing.");
+  }
+  if (receiverLatLng.lat === 0 && receiverLatLng.lng === 0) {
+    console.warn("Receiver coordinates are invalid or missing.");
+  }
 
     map = new google.maps.Map(mapDiv, {
       center: senderLatLng,
@@ -176,7 +189,9 @@
   });
 </script>
 
-<main>
+<Header/>
+
+<main class = "main">
   <h1>Track Shipment</h1>
   <div class="track-container">
     <div class="input-group">
@@ -192,9 +207,9 @@
     {#if shipmentDetails}
       <div class="shipment-details">
         <p><strong>Tracking ID:</strong> {shipmentDetails.tracking_id}</p>
-        <p><strong>Receiver:</strong> {shipmentDetails.reciver_name}</p>
+        <p><strong>Receiver Name:</strong> {shipmentDetails.reciver_name}</p>
         <p><strong>Status:</strong> {shipmentDetails.status}</p>
-        <p><strong>Address:</strong> {shipmentDetails.reciver_address}</p>
+        <p><strong>Reciver Address:</strong> {shipmentDetails.reciver_address}</p>
       </div>
       <div id="map" class="map-container"></div>
     {/if}
@@ -205,10 +220,23 @@
   </div>
 </main>
 
-<style>
+<style>.main {
+  font-family: 'Arial', sans-serif;
+  color: black;
+  margin-top: 63px;
+  text-align: center; /* Centers the content horizontally */
+  padding: 20px; /* Adds padding around the content */
+}
+
+.main h1 {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 20px; /* Adds space below the heading */
+}
+
   .track-container {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 60px;
   }
   .tracking-input {
     padding: 10px;

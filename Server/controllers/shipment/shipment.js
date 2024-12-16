@@ -1,5 +1,6 @@
 const { shipments, users, shipment_locations } =
   require("../../database/db").models;
+const initModels = require("../../model/init-models");
 const bcrypt = require("bcryptjs"); // For password hashing
 const jwt = require("jsonwebtoken");
 
@@ -17,6 +18,8 @@ exports.createShipment = async (req, res) => {
       sender_address,
       sender_latitude,
       sender_longitude,
+      reciver_latitude,
+      reciver_longitude,
     } = req.body;
 
     // Validate required fields
@@ -26,7 +29,9 @@ exports.createShipment = async (req, res) => {
       !reciver_address ||
       !sender_address ||
       !sender_latitude ||
-      !sender_longitude
+      !sender_longitude ||
+      !reciver_latitude ||
+      !reciver_longitude
     ) {
       console.log("Validation failed: Missing fields");
       return res.status(400).json({ error: "All fields are required" });
@@ -55,11 +60,21 @@ exports.createShipment = async (req, res) => {
       sender_longitude,
     });
 
-    // Respond with success message and shipment data
+    // Create only one location record for the receiver
+    const receiverLocation = await shipment_locations.create({
+      shipment_id: shipment.id, // Link to the created shipment
+      latitude: reciver_latitude,
+      longitude: reciver_longitude,
+    });
+
+    // Respond with success message and shipment and location data
     console.log("Shipment created:", shipment);
+    console.log("Receiver location created:", receiverLocation);
+
     res.status(201).json({
       message: "Shipment created successfully",
       shipment,
+      receiverLocation,
     });
   } catch (error) {
     console.error("Error creating shipment:", error.message);

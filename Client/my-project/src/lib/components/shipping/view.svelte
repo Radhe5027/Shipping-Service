@@ -135,50 +135,117 @@
           <span><strong>Receiver Address:</strong> {shipment.reciver_address}</span>
           <span><strong>Shipment Created On:</strong> {new Date(shipment.created_at).toLocaleString()}</span>
         </div>
-        {#if !isAdmin}
-          <button class="delete-button" on:click={() => deleteShipment(shipment.id)}>Delete</button>
-        {/if}
+        
+        <button class="delete-button" on:click={() => deleteShipment(shipment.id)}>Delete</button>
       </div>
     {/each}
   </div>
 {/if}
 
 <style>
-  .delete-button {
-    margin-top: 10px;
-    padding: 5px 10px;
-    background-color: #d9534f;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  .delete-button:hover {
-    background-color: #c9302c;
+  /* General styling */
+  .loading, .error-message {
+    text-align: center;
+    font-size: 1.2em;
+    margin-top: 20px;
   }
 
-  .status-buttons button {
-    margin-right: 10px;
-    padding: 5px 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+  .error-message {
+    color: #d9534f;
   }
-  
+
+  h3 {
+    text-align: center;
+    font-size: 2.5em;
+    margin-bottom: 50px;
+    color: #2c3e50;
+    font-weight: 600;
+    margin-top: -100px;
+  }
+
+  /* Container for the shipments */
+  .shipments-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 0 auto;
+    max-width: 1200px;
+  }
+
+  /* Individual shipment card */
+  .shipment-item {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .shipment-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  .shipment-header {
+    font-size: 1.1em;
+    color: #34495e;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  .shipment-details span {
+    display: block;
+    margin-bottom: 8px;
+    color: #7f8c8d;
+    font-size: 1em;
+  }
+
+  /* Delete button */
+  .delete-button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: #e74c3c;
+    color: white;
+    font-size: 1em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    text-align: center;
+  }
+
+  .delete-button:hover {
+    background-color: #c0392b;
+  }
+
+  /* Status buttons */
+  .status-buttons button {
+    padding: 8px 16px;
+    font-size: 1em;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-right: 8px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+
   .status-buttons button:hover {
-    opacity: 0.8;
+    opacity: 0.85;
+    transform: scale(1.05);
   }
 
   .status-buttons button:nth-child(1) {
-    background-color: #5bc0de;
+    background-color: #3498db; /* Placed */
   }
-  
+
   .status-buttons button:nth-child(2) {
-    background-color: #f0ad4e;
+    background-color: #f39c12; /* In Transit */
   }
 
   .status-buttons button:nth-child(3) {
-    background-color: #5cb85c;
+    background-color: #2ecc71; /* Delivered */
   }
 </style>
+
