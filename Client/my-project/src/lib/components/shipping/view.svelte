@@ -1,12 +1,12 @@
 <script>
   import { onMount } from 'svelte';
   import Header from '../header/header.svelte';
-  import { jwtDecode } from 'jwt-decode'; // Import jwt-decode to decode the token
+  import { jwtDecode } from 'jwt-decode';
 
   let shipments = [];
   let errorMessage = '';
   let isLoading = true;
-  let isAdmin = false; // Default is false
+  let isAdmin = false;
   let role_id = null;
 
   async function fetchShipments() {
@@ -18,10 +18,8 @@
     }
 
     try {
-      const decoded = jwtDecode(token); // Decode token
-      role_id = decoded.role_id; // Extract role_id from decoded token
-
-      // Check if user is admin (role_id = 2)
+      const decoded = jwtDecode(token);
+      role_id = decoded.role_id;
       isAdmin = role_id === 2;
 
       const response = await fetch('http://localhost:3000/api/shipping', {
@@ -34,17 +32,13 @@
 
       if (!response.ok) {
         const data = await response.json();
-        errorMessage = data.error || 'Failed to fetch shipments';
+        errorMessage = data.error || 'Kindly create shipment to view.';
         isLoading = false;
         return;
       }
 
       const data = await response.json();
-      if (data.shipments && data.shipments.length > 0) {
-        shipments = data.shipments;
-      } else {
-        errorMessage = 'No shipments found!';
-      }
+      shipments = data.shipments || [];
       isLoading = false;
     } catch (error) {
       console.error('Error fetching shipments:', error);
@@ -112,140 +106,164 @@
 {:else if errorMessage}
   <p class="error-message">{errorMessage}</p>
 {:else}
-  <h3>My Shipments</h3>
+  <h3>📦 My Shipments</h3>
   <div class="shipments-container">
     {#each shipments as shipment}
-      <div class="shipment-item">
-        <div class="shipment-header">
-          <strong>Tracking ID:</strong> {shipment.tracking_id}
-        </div>
-        <div class="shipment-details">
-          <span><strong>Receiver Name:</strong> {shipment.reciver_name}</span>
-          <span><strong>Status:</strong>
-            {#if isAdmin}
-              <div class="status-buttons">
-                <button on:click={() => updateShipmentStatus(shipment.id, "Placed")}>Placed</button>
-                <button on:click={() => updateShipmentStatus(shipment.id, "In Transit")}>In Transit</button>
-                <button on:click={() => updateShipmentStatus(shipment.id, "Delivered")}>Delivered</button>
-              </div>
-            {:else}
-              {shipment.status}
-            {/if}
+      <div class="shipment-card">
+        <div class="card-header">
+          <h4>Tracking ID: <span>{shipment.tracking_id}</span></h4>
+          <span class="badge status-{shipment.status.replace(/\s+/g, '-').toLowerCase()}">
+            {shipment.status}
           </span>
-          <span><strong>Receiver Address:</strong> {shipment.reciver_address}</span>
-          <span><strong>Shipment Created On:</strong> {new Date(shipment.created_at).toLocaleString()}</span>
         </div>
-        
-        <button class="delete-button" on:click={() => deleteShipment(shipment.id)}>Delete</button>
+
+        <div class="card-body">
+          <p><strong>Receiver:</strong> {shipment.reciver_name}</p>
+          <p><strong>Sender:</strong> {shipment.sender.username}</p>
+          <p><strong>Reciver Address:</strong> {shipment.reciver_address}</p>
+          <p><strong>Sender Address:</strong>{shipment.sender_address}</p>
+          <p><strong>Created On:</strong> {new Date(shipment.created_at).toLocaleString()}</p>
+        </div>
+
+        {#if isAdmin}
+          <div class="card-footer">
+            <div class="status-buttons">
+              <button on:click={() => updateShipmentStatus(shipment.id, 'Placed')}>Placed</button>
+              <button on:click={() => updateShipmentStatus(shipment.id, 'In Transit')}>In Transit</button>
+              <button on:click={() => updateShipmentStatus(shipment.id, 'Delivered')}>Delivered</button>
+            </div>
+            <button class="delete-button" on:click={() => deleteShipment(shipment.id)}>🗑 Delete</button>
+          </div>
+        {/if}
       </div>
     {/each}
   </div>
 {/if}
 
 <style>
-  /* General styling */
-  .loading, .error-message {
-    text-align: center;
-    font-size: 1.2em;
-    margin-top: 20px;
-  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
-  .error-message {
-    color: #d9534f;
+  * {
+    box-sizing: border-box;
   }
 
   h3 {
     text-align: center;
-    font-size: 2.5em;
-    margin-bottom: 50px;
     color: #2c3e50;
-    font-weight: 600;
-    margin-top: -100px;
+    margin-top: 20px;
+    font-size: 2em;
+    font-weight: 700;
+    margin-top: 70px;
   }
 
-  /* Container for the shipments */
+  .loading,
+  .error-message {
+    text-align: center;
+    font-size: 1.3em;
+    margin-top: 20px;
+  }
+
+  .error-message {
+    color: #e74c3c;
+  }
+
   .shipments-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
     gap: 20px;
-    margin: 0 auto;
-    max-width: 1200px;
-  }
-
-  /* Individual shipment card */
-  .shipment-item {
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    transition: transform 0.3s, box-shadow 0.3s;
   }
 
-  .shipment-item:hover {
+  .shipment-card {
+    background: linear-gradient(135deg, #ffffff, #f9f9f9);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    width: 350px;
+    transition: transform 0.3s ease;
+  }
+
+  .shipment-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   }
 
-  .shipment-header {
-    font-size: 1.1em;
-    color: #34495e;
-    font-weight: bold;
-    margin-bottom: 10px;
+  .card-header {
+    background-color: #2c3e50;
+    color: #fff;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
-  .shipment-details span {
-    display: block;
-    margin-bottom: 8px;
-    color: #7f8c8d;
+  .card-header h4 {
+    margin: 0;
     font-size: 1em;
   }
 
-  /* Delete button */
+  .badge {
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 0.8em;
+    font-weight: bold;
+    text-transform: capitalize;
+  }
+
+  .status-placed {
+    background-color: #3498db;
+    color: #fff;
+  }
+
+  .status-in-transit {
+    background-color: #f39c12;
+    color: #fff;
+  }
+
+  .status-delivered {
+    background-color: #2ecc71;
+    color: #fff;
+  }
+
+  .card-body {
+    padding: 15px;
+    line-height: 1.6;
+  }
+
+  .card-footer {
+    padding: 5px;
+    border-top: 1px solid #ececec;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .status-buttons button {
+    background-color: #2980b9;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 5px;
+    margin-right: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .status-buttons button:hover {
+    background-color: #1a5276;
+  }
+
   .delete-button {
-    margin-top: 15px;
-    padding: 10px 20px;
     background-color: #e74c3c;
     color: white;
-    font-size: 1em;
+    padding: 8px 10px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
-    width: 100%;
-    text-align: center;
+    transition: background-color 0.3s;
   }
 
   .delete-button:hover {
     background-color: #c0392b;
   }
-
-  /* Status buttons */
-  .status-buttons button {
-    padding: 8px 16px;
-    font-size: 1em;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-right: 8px;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-  }
-
-  .status-buttons button:hover {
-    opacity: 0.85;
-    transform: scale(1.05);
-  }
-
-  .status-buttons button:nth-child(1) {
-    background-color: #3498db; /* Placed */
-  }
-
-  .status-buttons button:nth-child(2) {
-    background-color: #f39c12; /* In Transit */
-  }
-
-  .status-buttons button:nth-child(3) {
-    background-color: #2ecc71; /* Delivered */
-  }
 </style>
-

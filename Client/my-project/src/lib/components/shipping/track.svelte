@@ -220,45 +220,146 @@
   </div>
 </main>
 
-<style>.main {
-  font-family: 'Arial', sans-serif;
-  color: black;
-  margin-top: 63px;
-  text-align: center; /* Centers the content horizontally */
-  padding: 20px; /* Adds padding around the content */
-}
+<style>
+  /* General Reset */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 
-.main h1 {
-  font-size: 3rem;
-  font-weight: bold;
-  margin-bottom: 20px; /* Adds space below the heading */
-}
+  .main {
+    margin: 80px auto;
+    text-align: center;
+    max-width: 900px;
+    padding: 30px;
+    background: white;
+    box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+  }
+
+  .main h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #ff416c, #ff4b2b);
+    -webkit-background-clip: text;
+    color: transparent;
+    margin-bottom: 20px;
+  }
 
   .track-container {
-    text-align: center;
-    margin-top: 60px;
+    margin-top: 40px;
+    animation: fadeInUp 1s ease;
   }
+
+  .input-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+  }
+
   .tracking-input {
-    padding: 10px;
-    font-size: 16px;
-    width: 300px;
+    padding: 12px 16px;
+    font-size: 18px;
+    width: 350px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.3s ease-in-out;
   }
+
+  .tracking-input:focus {
+    border-color: #ff4b2b;
+    box-shadow: 0px 0px 8px rgba(255, 75, 43, 0.3);
+  }
+
   .track-button {
-    padding: 10px 20px;
-    font-size: 16px;
+    padding: 12px 24px;
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(to right, #ff416c, #ff4b2b);
+    border: none;
+    border-radius: 8px;
     cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
   }
+
+  .track-button:hover {
+    transform: scale(1.05);
+    background: linear-gradient(to right, #ff4b2b, #ff416c);
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.25);
+  }
+
   .shipment-details {
-    margin-top: 20px;
+    background: #fef9f9;
+    border: 2px solid #ffe0e0;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    animation: fadeInUp 1s ease-in-out;
   }
+
+  .shipment-details p {
+    margin: 10px 0;
+    font-size: 18px;
+    color: #333;
+  }
+
+  .shipment-details strong {
+    color: #ff4b2b;
+  }
+
   .map-container {
     width: 100%;
-    height: 500px;
-    margin-top: 20px;
-   
+    height: 450px;
+    margin-top: 30px;
+    border: 2px solid #ff4b2b;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: zoomIn 1s ease-in-out;
   }
+
   .error {
-    color: red;
+    color: #ff4b2b;
+    font-weight: bold;
     margin-top: 20px;
+    animation: fadeIn 0.5s ease;
+  }
+
+  /* Keyframe Animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes zoomIn {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 </style>
+

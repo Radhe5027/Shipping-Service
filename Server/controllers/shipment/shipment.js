@@ -1,10 +1,5 @@
-const { shipments, users, shipment_locations } =
-  require("../../database/db").models;
-const initModels = require("../../model/init-models");
-const bcrypt = require("bcryptjs"); // For password hashing
-const jwt = require("jsonwebtoken");
-
-const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret"; // Replace with your secure key
+const { models } = require("../../database/db");
+const { shipments, users, shipment_locations } = models;
 
 exports.createShipment = async (req, res) => {
   try {
@@ -86,26 +81,41 @@ exports.getAllShipments = async (req, res) => {
   try {
     const { id: userId, role_id } = req.user; // Assuming the user is attached to the request object after `verifyToken` middleware
 
-    // If the user is an admin (role_id = 2), fetch all shipments
+    // If the user is an admin (role_id = 2), fetch all shipments with sender details
     if (role_id === 2) {
-      const shipmentsList = await shipments.findAll();
+      const shipmentsList = await shipments.findAll({
+        include: [
+          {
+            model: users, // Include the users model
+            as: "sender", // Alias defined in init-models.js
+            attributes: ["username"], // Fetch only the username from the users table
+          },
+        ],
+      });
       return res.status(200).json({ shipments: shipmentsList });
     }
 
     // If the user is not an admin, fetch shipments specific to their `sender_id`
     const { sender_id } = req.query; // Get sender_id from the query parameter
 
-    if (sender_id && sender_id !== userId) {
+    if (sender_id && sender_id != userId) {
       return res
         .status(403)
         .json({ error: "You can only view your own shipments." });
     }
 
-    // Fetch shipments for the user based on `sender_id`
+    // Fetch shipments for the user with sender details
     const shipmentsList = await shipments.findAll({
       where: {
         sender_id: userId, // Only return shipments belonging to the logged-in user
       },
+      include: [
+        {
+          model: users, // Include sender details
+          as: "sender", // Alias defined in init-models.js
+          attributes: ["username"], // Fetch only the username from the users table
+        },
+      ],
     });
 
     // Send the shipments data in the response

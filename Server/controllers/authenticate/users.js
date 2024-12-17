@@ -1,4 +1,5 @@
-const { users, roles } = require("../../database/db").models;
+const { models } = require("../../database/db");
+const { users, roles } = models;
 const bcrypt = require("bcryptjs"); // For password hashing
 const jwt = require("jsonwebtoken");
 

@@ -1,7 +1,5 @@
-const { shipments, users, shipment_locations } =
-  require("../../database/db").models;
-const bcrypt = require("bcryptjs"); // For password hashing
-const jwt = require("jsonwebtoken");
+const { models } = require("../../database/db");
+const { shipment_locations } = models;
 
 exports.addOrUpdateShipmentLocation = async (req, res) => {
   try {
