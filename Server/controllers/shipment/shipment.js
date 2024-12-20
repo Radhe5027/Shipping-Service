@@ -1,10 +1,13 @@
+// Import necessary models from the database
 const { models } = require("../../database/db");
 const { shipments, users, shipment_locations } = models;
 
+// Controller to handle the creation of a shipment
 exports.createShipment = async (req, res) => {
   try {
-    console.log("Incoming request body:", req.body); // Debug the incoming request
+    console.log("Incoming request body:", req.body); // Log the incoming request for debugging purposes
 
+    // Destructure necessary fields from the request body
     const {
       sender_id,
       reciver_name,
@@ -17,7 +20,7 @@ exports.createShipment = async (req, res) => {
       reciver_longitude,
     } = req.body;
 
-    // Validate required fields
+    // Validate that all required fields are provided
     if (
       !sender_id ||
       !reciver_name ||
@@ -29,114 +32,114 @@ exports.createShipment = async (req, res) => {
       !reciver_longitude
     ) {
       console.log("Validation failed: Missing fields");
-      return res.status(400).json({ error: "All fields are required" });
+      return res.status(400).json({ error: "All fields are required" }); // Respond with error if validation fails
     }
 
-    // Check if the sender exists in the database
+    // Check if the sender exists in the database by their ID
     const senderExists = await users.findByPk(sender_id);
     if (!senderExists) {
       console.log(`Sender with ID ${sender_id} not found`);
-      return res.status(400).json({ error: "Sender ID does not exist" });
+      return res.status(400).json({ error: "Sender ID does not exist" }); // Respond with error if sender is not found
     }
 
-    // Generate tracking ID
+    // Generate a unique tracking ID for the shipment
     const tracking_id = `SHIP-${Date.now()}`;
-    console.log("Generated tracking ID:", tracking_id);
+    console.log("Generated tracking ID:", tracking_id); // Log the generated tracking ID for debugging
 
-    // Create the shipment
+    // Create a new shipment record in the database
     const shipment = await shipments.create({
       sender_id,
       reciver_name,
       reciver_address,
-      status: status || "Placed", // Default to "Placed" if no status provided
+      status: status || "Placed", // Default status is "Placed" if not provided
       tracking_id,
       sender_address,
       sender_latitude,
       sender_longitude,
     });
 
-    // Create only one location record for the receiver
+    // Create a record for the receiver's location linked to the shipment
     const receiverLocation = await shipment_locations.create({
-      shipment_id: shipment.id, // Link to the created shipment
+      shipment_id: shipment.id, // Link the location to the newly created shipment
       latitude: reciver_latitude,
       longitude: reciver_longitude,
     });
 
-    // Respond with success message and shipment and location data
-    console.log("Shipment created:", shipment);
-    console.log("Receiver location created:", receiverLocation);
+    console.log("Shipment created:", shipment); // Log the created shipment details
+    console.log("Receiver location created:", receiverLocation); // Log the created receiver location details
 
+    // Respond with success message and data
     res.status(201).json({
       message: "Shipment created successfully",
       shipment,
       receiverLocation,
     });
   } catch (error) {
-    console.error("Error creating shipment:", error.message);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Error creating shipment:", error.message); // Log the error for debugging
+    res.status(500).json({ error: "Internal Server Error" }); // Respond with a server error
   }
 };
 
+// Controller to fetch all shipments
 exports.getAllShipments = async (req, res) => {
   try {
-    const { id: userId, role_id } = req.user; // Assuming the user is attached to the request object after `verifyToken` middleware
+    const { id: userId, role_id } = req.user; // Extract user details from request object (added by middleware)
 
-    // If the user is an admin (role_id = 2), fetch all shipments with sender details
+    // Admin users (role_id = 2) can fetch all shipments along with sender details
     if (role_id === 2) {
       const shipmentsList = await shipments.findAll({
         include: [
           {
-            model: users, // Include the users model
-            as: "sender", // Alias defined in init-models.js
-            attributes: ["username"], // Fetch only the username from the users table
+            model: users, // Include user details (sender details)
+            as: "sender", // Use the alias defined in the model association
+            attributes: ["username"], // Fetch only the username of the sender
           },
         ],
       });
-      return res.status(200).json({ shipments: shipmentsList });
+      return res.status(200).json({ shipments: shipmentsList }); // Respond with the list of all shipments
     }
 
-    // If the user is not an admin, fetch shipments specific to their `sender_id`
-    const { sender_id } = req.query; // Get sender_id from the query parameter
+    // Non-admin users can only fetch their own shipments
+    const { sender_id } = req.query; // Extract sender_id from query parameters
 
     if (sender_id && sender_id != userId) {
       return res
         .status(403)
-        .json({ error: "You can only view your own shipments." });
+        .json({ error: "You can only view your own shipments." }); // Respond with forbidden error if user tries to access others' shipments
     }
 
-    // Fetch shipments for the user with sender details
     const shipmentsList = await shipments.findAll({
       where: {
-        sender_id: userId, // Only return shipments belonging to the logged-in user
+        sender_id: userId, // Fetch shipments belonging to the logged-in user
       },
       include: [
         {
           model: users, // Include sender details
-          as: "sender", // Alias defined in init-models.js
-          attributes: ["username"], // Fetch only the username from the users table
+          as: "sender",
+          attributes: ["username"],
         },
       ],
     });
 
-    // Send the shipments data in the response
     if (shipmentsList.length === 0) {
       return res
         .status(404)
-        .json({ message: "No shipments found. Please create a shipment!" });
+        .json({ message: "No shipments found. Please create a shipment!" }); // Respond if no shipments are found
     }
 
-    res.status(200).json({ shipments: shipmentsList });
+    res.status(200).json({ shipments: shipmentsList }); // Respond with the list of shipments
   } catch (error) {
-    console.error("Error fetching shipments:", error.message);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Error fetching shipments:", error.message); // Log error for debugging
+    res.status(500).json({ error: "Internal Server Error" }); // Respond with server error
   }
 };
 
+// Controller to fetch shipment details by tracking ID
 exports.getShipmentByTrackingId = async (req, res) => {
   try {
-    const { tracking_id } = req.params;
+    const { tracking_id } = req.params; // Extract tracking ID from URL parameters
 
-    // Fetch shipment details
+    // Find the shipment with the provided tracking ID
     const shipment = await shipments.findOne({
       where: { tracking_id },
     });
@@ -144,16 +147,16 @@ exports.getShipmentByTrackingId = async (req, res) => {
     if (!shipment) {
       return res
         .status(404)
-        .json({ error: "Kindly Enter Correct Shipping Id" });
+        .json({ error: "Kindly Enter Correct Shipping Id" }); // Respond if shipment not found
     }
 
-    // Fetch shipment locations
+    // Fetch associated locations for the shipment
     const locations = await shipment_locations.findAll({
-      where: { shipment_id: shipment.id }, // Use shipment.id as the foreign key
-      attributes: ["latitude", "longitude"], // Only select required fields
+      where: { shipment_id: shipment.id },
+      attributes: ["latitude", "longitude"], // Fetch only the required fields
     });
 
-    // Format response
+    // Respond with shipment and location details
     res.status(200).json({
       shipment: {
         tracking_id: shipment.tracking_id,
@@ -175,41 +178,46 @@ exports.getShipmentByTrackingId = async (req, res) => {
   }
 };
 
+// Controller to update shipment status
 exports.updateShipmentStatus = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { status } = req.body;
+    const { id } = req.params; // Extract shipment ID from URL parameters
+    const { status } = req.body; // Extract status from request body
 
+    // Validate that the status is one of the allowed values
     if (!["Placed", "In Transit", "Delivered"].includes(status)) {
-      return res.status(400).json({ error: "Invalid status value" });
+      return res.status(400).json({ error: "Invalid status value" }); // Respond with error for invalid status
     }
 
+    // Update the shipment status
     const updated = await shipments.update({ status }, { where: { id } });
 
     if (updated[0] === 0) {
-      return res.status(404).json({ error: "Shipment not found" });
+      return res.status(404).json({ error: "Shipment not found" }); // Respond if shipment not found
     }
 
-    res.status(200).json({ message: "Shipment status updated successfully" });
+    res.status(200).json({ message: "Shipment status updated successfully" }); // Respond with success message
   } catch (error) {
     console.error("Error updating shipment status:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
+// Controller to delete a shipment
 exports.deleteShipment = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // Extract shipment ID from URL parameters
 
+    // Delete the shipment
     const deleted = await shipments.destroy({
       where: { id },
     });
 
     if (!deleted) {
-      return res.status(404).json({ error: "Shipment not found" });
+      return res.status(404).json({ error: "Shipment not found" }); // Respond if shipment not found
     }
 
-    res.status(200).json({ message: "Shipment deleted successfully" });
+    res.status(200).json({ message: "Shipment deleted successfully" }); // Respond with success message
   } catch (error) {
     console.error("Error deleting shipment:", error.message);
     res.status(500).json({ error: "Internal Server Error" });

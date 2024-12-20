@@ -1,9 +1,12 @@
-import { mount } from 'svelte'
-import './app.css'
-import App from './App.svelte'
+import { mount } from "svelte"; // Importing a hypothetical `mount` function from Svelte (though Svelte typically doesn't have this method).
+import "./app.css"; // Importing the CSS file to style the application.
+import App from "./App.svelte"; // Importing the main Svelte component (root component of the application).
 
+// Mounting the `App` component to a DOM element with the id 'app'.
+// The `mount` function is being used here, which is assumed to be a custom or hypothetical utility.
 const app = mount(App, {
-  target: document.getElementById('app'),
-})
+  target: document.getElementById("app"), // Targeting the HTML element where the app will be rendered.
+});
 
-export default app
+// Exporting the `app` instance so it can be reused or accessed elsewhere in the project if needed.
+export default app;

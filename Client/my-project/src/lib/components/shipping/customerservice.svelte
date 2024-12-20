@@ -1,32 +1,35 @@
 <script>
-    import { onMount } from "svelte";
-    import Header from "../header/header.svelte";
+    import { onMount } from "svelte";  // Import the 'onMount' lifecycle function from Svelte, which is used to run code when the component is mounted (rendered) on the page.
+    import Header from "../header/header.svelte";  // Import a custom 'Header' component from the specified relative path to use it in this component.
 
-    let currentRoute = "home";
+    let currentRoute = "home";  // Define a reactive variable 'currentRoute' and set its initial value to "home". This will track the current active route/page.
 
+    // Define a 'navigate' function to change the current route when a navigation event occurs.
     const navigate = (route) => {
-        currentRoute = route;
-        window.scrollTo(0, 0);
+        currentRoute = route;  // Update the value of 'currentRoute' to the new route passed as an argument.
+        window.scrollTo(0, 0);  // Scroll to the top of the page (coordinates 0,0) whenever a new route is selected, ensuring smooth navigation.
     };
 </script>
 
-<Header />
-<header>
-    <h1>Customer Service</h1>
-    <p>We're here to help with all your queries!</p>
+
+<Header />  <!-- Render the Header component, which is imported earlier in the script. This could contain global navigation or branding. -->
+
+<header>  
+    <h1>Customer Service</h1>  <!-- Main heading for the page, showing that this is the customer service section. -->
+    <p>We're here to help with all your queries!</p>  <!-- A short tagline describing the customer service offering. -->
 </header>
 
-<nav>
-    <button on:click={() => navigate("home")}>Home</button>
-    <button on:click={() => navigate("faq")}>FAQs</button>
-    <button on:click={() => navigate("emailSupport")}>Email Support</button>
-    <button on:click={() => navigate("callSupport")}>Call Support</button>
+<nav>  <!-- Navigation bar that contains buttons to navigate between different routes/pages. -->
+    <button on:click={() => navigate("home")}>Home</button>  <!-- Button to navigate to the "home" route. The `navigate` function is called on click. -->
+    <button on:click={() => navigate("faq")}>FAQs</button>  <!-- Button to navigate to the "faq" route. -->
+    <button on:click={() => navigate("emailSupport")}>Email Support</button>  <!-- Button to navigate to the "emailSupport" route. -->
+    <button on:click={() => navigate("callSupport")}>Call Support</button>  <!-- Button to navigate to the "callSupport" route. -->
 </nav>
 
-<main class="container">
-    {#if currentRoute === "home"}
+<main class="container">  <!-- The main content container. The content changes dynamically based on the current route. -->
+    {#if currentRoute === "home"}  <!-- Conditional rendering for the "home" route. -->
         <section>
-            <h2>Welcome to Customer Support</h2>
+            <h2>Welcome to Customer Support</h2>  <!-- Heading for the home section of customer support. -->
             <p>
                 Need help? Explore our FAQs or contact us via email or toll-free
                 number. We're dedicated to assisting you 24/7.
@@ -34,26 +37,26 @@
         </section>
     {/if}
 
-    {#if currentRoute === "faq"}
+    {#if currentRoute === "faq"}  <!-- Conditional rendering for the "faq" route. -->
         <section>
-            <h2>FAQs</h2>
+            <h2>FAQs</h2>  <!-- Heading for the FAQs section. -->
             <ul class="faq-list">
-                <li on:click={() => navigate("createShipment")}>
+                <li on:click={() => navigate("createShipment")}>  <!-- Navigate to "createShipment" when clicked. -->
                     <span>📦</span> How to create a shipment?
                 </li>
-                <li on:click={() => navigate("orderDelivery")}>
+                <li on:click={() => navigate("orderDelivery")}>  <!-- Navigate to "orderDelivery" when clicked. -->
                     <span>🚚</span> When will the order be delivered?
                 </li>
-                <li on:click={() => navigate("trackOrder")}>
+                <li on:click={() => navigate("trackOrder")}>  <!-- Navigate to "trackOrder" when clicked. -->
                     <span>🔍</span> How can I track my order?
                 </li>
             </ul>
         </section>
     {/if}
 
-    {#if currentRoute === "createShipment"}
+    {#if currentRoute === "createShipment"}  <!-- Conditional rendering for the "createShipment" route. -->
         <section>
-            <h2>How to create a shipment?</h2>
+            <h2>How to create a shipment?</h2>  <!-- Heading for the "createShipment" section. -->
             <p>
                 To create a shipment, log in to your account, click on "Create" in
                 the header section, and fill in the required details, including the
@@ -61,37 +64,37 @@
                 longitude" to auto-fetch based on input address, then click on "Create
                 Shipment" to complete the process.
             </p>
-            <button on:click={() => navigate("faq")}>Back to FAQs</button>
+            <button on:click={() => navigate("faq")}>Back to FAQs</button>  <!-- Button to go back to the "faq" route. -->
         </section>
     {/if}
 
-    {#if currentRoute === "orderDelivery"}
+    {#if currentRoute === "orderDelivery"}  <!-- Conditional rendering for the "orderDelivery" route. -->
         <section>
-            <h2>When will the order be delivered?</h2>
+            <h2>When will the order be delivered?</h2>  <!-- Heading for the "orderDelivery" section. -->
             <p>
                 The delivery time depends on the selected shipping method. Standard
                 shipping takes 5-7 business days, while express shipping takes 1-2
                 business days. Check your email for the estimated delivery date.
             </p>
-            <button on:click={() => navigate("faq")}>Back to FAQs</button>
+            <button on:click={() => navigate("faq")}>Back to FAQs</button>  <!-- Button to go back to the "faq" route. -->
         </section>
     {/if}
 
-    {#if currentRoute === "trackOrder"}
+    {#if currentRoute === "trackOrder"}  <!-- Conditional rendering for the "trackOrder" route. -->
         <section>
-            <h2>How can I track my order?</h2>
+            <h2>How can I track my order?</h2>  <!-- Heading for the "trackOrder" section. -->
             <p>
                 You can track your order by visiting the "Track" section on our
                 website. Enter your tracking ID to view the current status of your
                 package and the order details.
             </p>
-            <button on:click={() => navigate("faq")}>Back to FAQs</button>
+            <button on:click={() => navigate("faq")}>Back to FAQs</button>  <!-- Button to go back to the "faq" route. -->
         </section>
     {/if}
 
-    {#if currentRoute === "emailSupport"}
+    {#if currentRoute === "emailSupport"}  <!-- Conditional rendering for the "emailSupport" route. -->
         <section>
-            <h2>Email Support</h2>
+            <h2>Email Support</h2>  <!-- Heading for the "emailSupport" section. -->
             <p>
                 Reach out to us via email at
                 <a href="mailto:support@example.com">support@example.com</a>. We aim to
@@ -100,9 +103,9 @@
         </section>
     {/if}
 
-    {#if currentRoute === "callSupport"}
+    {#if currentRoute === "callSupport"}  <!-- Conditional rendering for the "callSupport" route. -->
         <section>
-            <h2>Call Support</h2>
+            <h2>Call Support</h2>  <!-- Heading for the "callSupport" section. -->
             <p>
                 Our toll-free number <strong>1-800-555-5555</strong> is available
                 24/7. Feel free to contact us for any assistance you need.
@@ -111,12 +114,13 @@
     {/if}
 </main>
 
-<footer>
+<footer>  <!-- Footer of the page with some additional information. -->
     <p>
         © 2024 Customer Support | Need help?
-        <a href="mailto:support@example.com">Email Us</a>
+        <a href="mailto:support@example.com">Email Us</a>  <!-- Link to email customer support. -->
     </p>
 </footer>
+
 
 <style>
     .container {

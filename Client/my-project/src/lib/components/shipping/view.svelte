@@ -1,103 +1,111 @@
 <script>
-  import { onMount } from 'svelte';
-  import Header from '../header/header.svelte';
-  import { jwtDecode } from 'jwt-decode';
+  // Import necessary functions and components from Svelte
+  import { onMount } from 'svelte'; // onMount lifecycle function is used for running code when the component is first mounted
+  import Header from '../header/header.svelte'; // Importing the Header component
+  import { jwtDecode } from 'jwt-decode'; // Importing a function to decode JWT tokens
 
-  let shipments = [];
-  let errorMessage = '';
-  let isLoading = true;
-  let isAdmin = false;
-  let role_id = null;
+  // Declare reactive variables to manage shipments, error messages, loading state, and user roles
+  let shipments = []; // Holds the list of shipments
+  let errorMessage = ''; // Holds any error messages to be displayed
+  let isLoading = true; // Tracks the loading state (whether data is being fetched)
+  let isAdmin = false; // Determines if the user has an admin role
+  let role_id = null; // Holds the user's role ID (decoded from the JWT)
 
+  // Function to fetch shipments from the API
   async function fetchShipments() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token'); // Retrieve the token from local storage
     if (!token) {
-      errorMessage = 'You must be logged in to view shipments.';
-      isLoading = false;
-      return;
+      errorMessage = 'You must be logged in to view shipments.'; // If no token is found, set error message
+      isLoading = false; // Set loading state to false
+      return; // Exit the function if there's no token
     }
 
     try {
-      const decoded = jwtDecode(token);
-      role_id = decoded.role_id;
-      isAdmin = role_id === 2;
+      const decoded = jwtDecode(token); // Decode the JWT token to get user details
+      role_id = decoded.role_id; // Extract role ID from the decoded token
+      isAdmin = role_id === 2; // Set isAdmin to true if the role ID is 2 (indicating admin)
 
+      // Fetch the shipment data from the API
       const response = await fetch('http://localhost:3000/api/shipping', {
-        method: 'GET',
+        method: 'GET', // GET method to fetch shipments
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // Include token in the Authorization header
+          'Content-Type': 'application/json', // Specify the content type
         },
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        errorMessage = data.error || 'Kindly create shipment to view.';
-        isLoading = false;
-        return;
+      if (!response.ok) { // If the response is not ok, handle the error
+        const data = await response.json(); // Parse the JSON response
+        errorMessage = data.error || 'Kindly create shipment to view.'; // Set error message from response
+        isLoading = false; // Set loading state to false
+        return; // Exit the function if there was an error
       }
 
-      const data = await response.json();
-      shipments = data.shipments || [];
-      isLoading = false;
+      const data = await response.json(); // Parse the JSON response for successful fetch
+      shipments = data.shipments || []; // Set the shipments array with the fetched data
+      isLoading = false; // Set loading state to false
     } catch (error) {
-      console.error('Error fetching shipments:', error);
-      errorMessage = 'Failed to fetch shipments';
-      isLoading = false;
+      console.error('Error fetching shipments:', error); // Log any errors that occur
+      errorMessage = 'Failed to fetch shipments'; // Set the error message
+      isLoading = false; // Set loading state to false
     }
   }
 
+  // Function to update the status of a shipment
   async function updateShipmentStatus(id, status) {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token'); // Retrieve the token from local storage
     try {
       const response = await fetch(`http://localhost:3000/api/shipping/${id}/status`, {
-        method: 'PUT',
+        method: 'PUT', // PUT method to update shipment status
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // Include token in the Authorization header
+          'Content-Type': 'application/json', // Specify the content type
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status }), // Send the status in the request body
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        alert(data.error || 'Failed to update shipment status');
-        return;
+      if (!response.ok) { // If the response is not ok, handle the error
+        const data = await response.json(); // Parse the JSON response
+        alert(data.error || 'Failed to update shipment status'); // Show error message in alert
+        return; // Exit the function if there was an error
       }
-      alert('Shipment status updated successfully');
-      fetchShipments();
+      alert('Shipment status updated successfully'); // Show success message in alert
+      fetchShipments(); // Refresh the shipment list after update
     } catch (error) {
-      console.error('Error updating shipment status:', error);
+      console.error('Error updating shipment status:', error); // Log any errors
     }
   }
 
+  // Function to delete a shipment
   async function deleteShipment(id) {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token'); // Retrieve the token from local storage
     try {
       const response = await fetch(`http://localhost:3000/api/shipping/${id}`, {
-        method: 'DELETE',
+        method: 'DELETE', // DELETE method to remove shipment
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json', // Specify the content type
+          'Authorization': `Bearer ${token}`, // Include token in the Authorization header
         },
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        alert(data.error || 'Failed to delete shipment');
-        return;
+      if (!response.ok) { // If the response is not ok, handle the error
+        const data = await response.json(); // Parse the JSON response
+        alert(data.error || 'Failed to delete shipment'); // Show error message in alert
+        return; // Exit the function if there was an error
       }
-      alert('Shipment deleted successfully');
-      fetchShipments();
+      alert('Shipment deleted successfully'); // Show success message in alert
+      fetchShipments(); // Refresh the shipment list after deletion
     } catch (error) {
-      console.error('Error deleting shipment:', error);
+      console.error('Error deleting shipment:', error); // Log any errors
     }
   }
 
+  // Fetch shipments when the component is mounted
   onMount(() => {
-    fetchShipments();
+    fetchShipments(); // Call fetchShipments when the component is mounted
   });
 </script>
+
 
 <Header />
 
@@ -132,9 +140,11 @@
               <button on:click={() => updateShipmentStatus(shipment.id, 'In Transit')}>In Transit</button>
               <button on:click={() => updateShipmentStatus(shipment.id, 'Delivered')}>Delivered</button>
             </div>
-            <button class="delete-button" on:click={() => deleteShipment(shipment.id)}>🗑 Delete</button>
           </div>
         {/if}
+          <div>
+            <button class="delete-button" on:click={() => deleteShipment(shipment.id)}>🗑 Delete</button>
+          </div>
       </div>
     {/each}
   </div>
@@ -243,8 +253,9 @@
     color: #fff;
     border: none;
     border-radius: 8px;
-    padding: 8px 5px;
-    margin-right: 8px;
+    padding: 8px 10px;
+    margin-right: 10px;
+    margin-left: 10px;
     cursor: pointer;
     transition: background-color 0.3s ease;
   }
