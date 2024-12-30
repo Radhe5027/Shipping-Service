@@ -3,6 +3,9 @@ require("dotenv").config();
 
 // Import the express framework to create an Express app and define routes
 const express = require("express");
+const swaggerUi = require("swagger-ui-express");
+const fs = require("fs");
+const YAML = require("yaml");
 
 // Import the sequelize instance and database models to interact with the database
 const { sequelize, models } = require("./database/db");
@@ -22,8 +25,14 @@ const app = express();
 // Import the CORS middleware to allow cross-origin requests from other domains
 const cors = require("cors");
 
+// Load the OpenAPI document
+const openapiDocument = YAML.parse(fs.readFileSync("./openapi.yaml", "utf8"));
+
+// Serve the OpenAPI document at /api-docs
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openapiDocument));
 // Use CORS middleware to enable cross-origin requests from the specified frontend URL (localhost:5173)
 // CORS helps handle security for cross-origin resource sharing
+// .use - used to mount the middleware functions(like - cors)
 app.use(
   cors({
     origin: "http://localhost:5173", // Frontend URL from where requests are allowed
@@ -37,10 +46,14 @@ app.options("*", cors());
 
 // Middleware setup:
 // Middleware to parse URL-encoded data, commonly used for form submissions
+// express.urlencoded() is used to parse application/x-www-form-urlencoded data (which is how form data is typically sent).
+// req.body holds the parsed form data, which you can access in your route handler.
+//express.urlencoded({ extended: true }) is used for handling traditional form submissions (application/x-www-form-urlencoded).
 app.use(express.urlencoded({ extended: true }));
 
 // Middleware to parse incoming JSON data in request bodies
 // This is useful for handling API requests where the payload is in JSON format
+// express.json() is used for handling API requests where the data is sent in JSON format (application/json).
 app.use(express.json());
 
 // A simple GET route to test if the server is working

@@ -20,13 +20,13 @@ const { verifyAdmin } = require("../middleware/verifyAdmin"); // Middleware to c
 // Define the routes for shipment operations:
 
 // POST route to create a new shipment, with token verification for authentication
-router.post("/api/shipping", verifyToken, createShipment); // POST /api/shipments
+router.post("/api/shipping", verifyToken, createShipment); // POST /api/shipping
 
 // GET route to retrieve all shipments, with token verification for authentication
-router.get("/api/shipping", verifyToken, getAllShipments); // GET /api/shipments
+router.get("/api/shipping", verifyToken, getAllShipments); // GET /api/shipping
 
 // GET route to retrieve a specific shipment by its tracking ID, with token verification for authentication
-router.get("/api/shipping/:tracking_id", verifyToken, getShipmentByTrackingId); // GET /api/shipments/:tracking_id
+router.get("/api/shipping/:tracking_id", verifyToken, getShipmentByTrackingId); // GET /api/shipping/:tracking_id
 
 // PUT route to update the status of a specific shipment by its ID, with token and admin verification
 router.put(

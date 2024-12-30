@@ -14,7 +14,7 @@
 </script>
 
 <header>
-  <div class="logo" on:click={() => handleNavigation("/")}> <!-- Click on logo navigates to the home page -->
+  <div class="logo" on:click={() => handleNavigation("/dashboard")}> <!-- Click on logo navigates to the home page -->
     <img src="/src/assets/logo.png" alt="RapidRoute Logo" class="logo-image" />
     <h1>RapidRoute</h1> <!-- Display the logo and app name -->
   </div>
@@ -129,8 +129,5 @@
     margin-right: 8px; /* Space between the icon and text */
   }
 
-  /* Style to prevent the header from overlapping the page content */
-  main {
-    padding-top: 100px; /* Offset the content to avoid overlap with the header */
-  }
+  
 </style>

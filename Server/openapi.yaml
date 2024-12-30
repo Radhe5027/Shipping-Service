@@ -1,0 +1,238 @@
+openapi: 3.1.0
+info:
+  title: Shipping API Documentation
+  description: Comprehensive documentation for all API endpoints in the Shipping API.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local server
+
+paths:
+  /api/signup:
+    post:
+      summary: User signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                confirmPassword:
+                  type: string
+                  format: password
+                role:
+                  type: string
+                  enum: [user, admin]
+      responses:
+        "201":
+          description: User signed up successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  role:
+                    type: string
+                  userId:
+                    type: integer
+  /api/login:
+    post:
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        "200":
+          description: Login successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      username:
+                        type: string
+                      email:
+                        type: string
+                      role_id:
+                        type: integer
+                  token:
+                    type: string
+  /api/shipping/{tracking_id}:
+    get:
+      summary: Get shipment by tracking ID
+      parameters:
+        - name: tracking_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Shipment details retrieved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shipment:
+                    type: object
+  /api/shipping:
+    get:
+      summary: Get all shipments
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of shipments retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      summary: Create a new shipment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sender_id:
+                  type: integer
+                reciver_name:
+                  type: string
+                reciver_address:
+                  type: string
+                status:
+                  type: string
+                  enum: [Placed, In Transit, Delivered]
+                sender_address:
+                  type: string
+                sender_latitude:
+                  type: number
+                sender_longitude:
+                  type: number
+                reciver_latitude:
+                  type: number
+                reciver_longitude:
+                  type: number
+      responses:
+        "201":
+          description: Shipment created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/shipping/{id}:
+    delete:
+      summary: Delete a shipment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Shipment deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /api/shipping/{id}/status:
+    put:
+      summary: Update shipment status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [Placed, In Transit, Delivered]
+      responses:
+        "200":
+          description: Shipment status updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /api/shipping/{id}/location:
+    get:
+      summary: Get shipment location
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Shipment location retrieved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location:
+                    type: object
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

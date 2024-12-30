@@ -1,79 +1,138 @@
 <script>
-  // Import necessary functions from Svelte
-  import { onMount } from 'svelte'; // Lifecycle function for performing actions when the component is mounted
-  import { tick } from 'svelte'; // Function to trigger a reactivity update
-  import Header from '../header/header.svelte'; // Importing a header component
+  // Import required Svelte lifecycle methods and components
+  import { onMount } from 'svelte'; // Executes a function when the component is mounted
+  import { tick } from 'svelte'; // Waits for the DOM to update before proceeding
+  import Header from '../header/header.svelte'; // Importing a reusable header component
 
-  // Declare variables to store shipment data, error messages, map object, etc.
-  let trackingId = ''; // Tracking ID to fetch shipment details
-  let shipmentDetails = null; // Shipment details object to store fetched data
-  let shipmentLocations = []; // List of shipment locations (coordinates)
-  let errorMessage = ''; // Error message to display when issues occur
-  let map; // Google Map object
-  let googleMapsLoaded = false; // Boolean flag to check if Google Maps API is loaded
-  let distance = null; // Distance between sender and receiver
+  // Define variables for data and states
+  let trackingId = ''; // Stores the tracking ID entered by the user
+  let shipmentDetails = null; // Holds shipment details fetched from the server
+  let shipmentLocations = []; // Stores locations related to the shipment
+  let errorMessage = ''; // Displays error messages to the user
+  let map; // Google Maps instance
+  let googleMapsLoaded = false; // Tracks if Google Maps API is loaded
+  let distance = null; // Distance between sender and receiver locations
+  let statusMarker = null; // Marker representing the shipment's status on the map
+  let animationInterval = null; // Interval for animating the marker movement
 
-  // Default URLs for icons to represent sender, receiver, and shipment status
-  const iconUrl = 'https://cdn-icons-png.flaticon.com/128/9279/9279555.png'; // Default icon for shipment status
-  const recicon = 'https://cdn-icons-png.flaticon.com/128/14090/14090489.png'; // Receiver icon
-  const senicon = "https://cdn-icons-png.flaticon.com/128/2776/2776067.png"; // Sender icon
+  // URLs for different map markers
+  const iconUrl = 'https://cdn-icons-png.flaticon.com/128/1048/1048329.png'; // Icon for shipment status marker
+  const recicon = 'https://cdn-icons-png.flaticon.com/128/14090/14090489.png'; // Icon for receiver marker
+  const senicon = 'https://cdn-icons-png.flaticon.com/128/2776/2776067.png'; // Icon for sender marker
 
-  // Function to track a shipment using the provided tracking ID
+  // Function to fetch and display shipment details
   async function trackShipment() {
-    // Check if tracking ID is provided, if not, show an error message
+    // If tracking ID is empty, display an error
     if (!trackingId) {
       errorMessage = "Please enter a tracking ID";
       return;
     }
     try {
-      // Fetch shipment details from the server using the tracking ID
+      // Make an API request to fetch shipment data
       const response = await fetch(`http://localhost:3000/api/shipping/${trackingId}`, {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`, // Authorization header with token
+          Authorization: `Bearer ${localStorage.getItem('token')}`, // Include token for authorization
         },
       });
 
-      const data = await response.json(); // Parse the response as JSON
+      const data = await response.json(); // Parse the JSON response
 
+      // If the request is successful, update data and initialize the map
       if (response.ok) {
-        // If the response is successful, assign shipment details and locations
         shipmentDetails = data.shipment;
         shipmentLocations = data.locations;
-        errorMessage = ''; // Clear error message
-        await initializeMap(); // Initialize map if shipment data is successfully fetched
+        errorMessage = '';
+        await initializeMap(); // Render the map with the fetched details
       } else {
-        // Handle errors from the server
+        // Handle API errors
         errorMessage = data.error || "Error fetching shipment details.";
         shipmentDetails = null;
         shipmentLocations = [];
       }
     } catch (error) {
-      // Catch any network or other errors during the fetch process
+      // Handle network or other errors
       console.error("Error tracking shipment:", error.message);
-      errorMessage = "Error tracking the shipment"; // Display a generic error message
+      errorMessage = "Error tracking the shipment";
       shipmentDetails = null;
       shipmentLocations = [];
     }
   }
 
-  // Function to initialize the Google Map with sender and receiver locations
-  async function initializeMap() {
-    await tick(); // Ensure Svelte's reactivity system is up to date
+  // Function to animate the shipment marker along the route
+  function moveMarkerAlongRoute(route, startRatio) {
+    clearAnimation(); // Clear any existing animations
+    const path = route.steps.flatMap(step => step.path); // Extract path points from the route
+    const totalPoints = path.length;
 
-    const mapDiv = document.getElementById('map'); // Get the map div from the DOM
+    // Calculate the starting index for the animation
+    const startIndex = Math.floor(totalPoints * startRatio);
+    let currentIndex = startIndex;
+
+    // Create a new marker at the starting position
+    statusMarker = new google.maps.Marker({
+      position: path[currentIndex],
+      map: map,
+      icon: {
+        url: iconUrl,
+        scaledSize: new google.maps.Size(32, 32), // Set the icon size
+      },
+      title: `Shipment Status: ${shipmentDetails.status}`, // Add a tooltip with the status
+    });
+
+    // Animate the marker along the route
+    animationInterval = setInterval(() => {
+      if (currentIndex >= totalPoints - 1) {
+        //clearAnimation(); // Stop animation when the end is reached
+        return;
+      }
+      currentIndex++;
+      statusMarker.setPosition(path[currentIndex]); // Move marker to the next point
+    }, 500); // Speed of animation in milliseconds
+  }
+
+  // Function to place a marker at the delivered location
+  function placeDeliveredMarker(position) {
+    clearAnimation(); // Stop any ongoing animations
+    statusMarker = new google.maps.Marker({
+      position: position,
+      map: map,
+      icon: {
+        url: iconUrl,
+        scaledSize: new google.maps.Size(32, 32),
+      },
+      title: `Shipment Status: Delivered`, // Tooltip for the delivered status
+    });
+  }
+
+  // Function to clear animations and markers
+  function clearAnimation() {
+    if (animationInterval) {
+      clearInterval(animationInterval); // Clear the animation interval
+      animationInterval = null;
+    }
+    if (statusMarker) {
+      statusMarker.setMap(null); // Remove the marker from the map
+      statusMarker = null;
+    }
+  }
+
+  // Function to initialize and render the map
+  async function initializeMap() {
+    await tick(); // Wait for the DOM to update
+    const mapDiv = document.getElementById('map'); // Get the map container element
     if (!mapDiv) {
-      console.error("Map div not found!"); // Log an error if the div is not found
+      console.error("Map div not found!");
       return;
     }
 
-    // Ensure shipment details and locations exist before proceeding
+    // Validate shipment data
     if (!shipmentDetails || !shipmentLocations.length) {
       console.error("Shipment details or locations are missing.");
       return;
     }
 
-    // Create latitude and longitude objects for sender and receiver
+    // Define sender and receiver coordinates
     const senderLatLng = {
       lat: parseFloat(shipmentDetails.sender_latitude),
       lng: parseFloat(shipmentDetails.sender_longitude),
@@ -83,199 +142,108 @@
       lng: parseFloat(shipmentLocations[0]?.longitude || 0),
     };
 
-    // Check if sender or receiver coordinates are invalid
-    if (senderLatLng.lat === 0 && senderLatLng.lng === 0) {
-      console.warn("Sender coordinates are invalid or missing.");
-    }
-    if (receiverLatLng.lat === 0 && receiverLatLng.lng === 0) {
-      console.warn("Receiver coordinates are invalid or missing.");
-    }
-
-    // Initialize the map centered around the sender location
+    // Initialize the Google Map
     map = new google.maps.Map(mapDiv, {
       center: senderLatLng,
       zoom: 8,
     });
 
-    // Define bounds to include both sender and receiver locations
+    // Adjust the map bounds to fit sender and receiver
     const bounds = new google.maps.LatLngBounds();
     bounds.extend(senderLatLng);
     bounds.extend(receiverLatLng);
-
-    // Fit the map to the bounds
     map.fitBounds(bounds);
 
-    // Add markers for sender and receiver locations on the map
-    const senderMarker = new google.maps.Marker({
+    // Place markers for sender and receiver
+    new google.maps.Marker({
       position: senderLatLng,
       map: map,
       icon: {
         url: senicon,
-        scaledSize: new google.maps.Size(32, 32), // Small icon size
+        scaledSize: new google.maps.Size(32, 32),
       },
       title: "Sender Location",
     });
 
-    const receiverMarker = new google.maps.Marker({
+    new google.maps.Marker({
       position: receiverLatLng,
       map: map,
       icon: {
         url: recicon,
-        scaledSize: new google.maps.Size(32, 32), // Small icon size
+        scaledSize: new google.maps.Size(32, 32),
       },
       title: "Receiver Location",
     });
 
-    // Create DirectionsService and DirectionsRenderer to calculate the route
+    // Request and display the route between sender and receiver
     const directionsService = new google.maps.DirectionsService();
     const directionsRenderer = new google.maps.DirectionsRenderer();
     directionsRenderer.setMap(map);
 
-    // Define the route request from sender to receiver
     const request = {
       origin: senderLatLng,
       destination: receiverLatLng,
-      travelMode: google.maps.TravelMode.DRIVING, // Mode of travel (driving)
+      travelMode: google.maps.TravelMode.DRIVING,
     };
 
-    // Request the route and handle the response
+    // Handle route data and marker placement
     directionsService.route(request, (result, status) => {
       if (status === google.maps.DirectionsStatus.OK) {
         directionsRenderer.setDirections(result); // Render the route on the map
-
-        // Calculate and store the distance
         const route = result.routes[0].legs[0];
-        distance = route.distance.text; // Distance in human-readable format
+        distance = route.distance.text; // Save the distance
 
-        // Add a marker based on the shipment status
+        // Place or animate markers based on shipment status
         if (shipmentDetails.status === "Placed") {
-          placeOrderPlacedMarker(senderLatLng); // Order placed
+          moveMarkerAlongRoute(route, 0); // Start from sender
         } else if (shipmentDetails.status === "In Transit") {
-          placeInTransitMarker(route); // Shipment in transit
+          moveMarkerAlongRoute(route, 0.5); // Start from halfway
         } else if (shipmentDetails.status === "Delivered") {
-          placeDeliveredMarker(receiverLatLng); // Delivered
+          placeDeliveredMarker(receiverLatLng); // Mark as delivered
         }
       } else {
-        console.error('Directions request failed due to ' + status); // Log errors from DirectionsService
+        console.error('Directions request failed due to ' + status);
       }
     });
-
-    // Function to place a marker for "Order Placed" status at the sender's location
-    function placeOrderPlacedMarker(position) {
-      const statusMarker = new google.maps.Marker({
-        position: position,
-        map: map,
-        icon: {
-          url: iconUrl,
-          scaledSize: new google.maps.Size(32, 32),
-        },
-        title: `Shipment Status: Order Placed`,
-      });
-
-      const statusInfo = new google.maps.InfoWindow({
-        content: `<div><strong>Status</strong><br>Order Placed</div>`,
-      });
-
-      statusMarker.addListener("click", () => statusInfo.open(map, statusMarker)); // Display info on marker click
-    }
-
-    // Function to place a marker for "In Transit" status at the midpoint of the route
-    function placeInTransitMarker(route) {
-      const totalDistance = route.distance.value; // Total distance in meters
-      const midpointDistance = totalDistance * 0.5; // 50% of the way
-
-      let cumulativeDistance = 0;
-      let markerPosition = null;
-
-      // Loop through the route steps and find the midpoint
-      for (let step of route.steps) {
-        const stepDistance = step.distance.value; // Distance of the current step
-        cumulativeDistance += stepDistance;
-
-        if (cumulativeDistance >= midpointDistance) {
-          const segmentRatio = (midpointDistance - (cumulativeDistance - stepDistance)) / stepDistance;
-          const lat = step.path[0].lat() + (step.path[1].lat() - step.path[0].lat()) * segmentRatio;
-          const lng = step.path[0].lng() + (step.path[1].lng() - step.path[0].lng()) * segmentRatio;
-
-          markerPosition = { lat, lng };
-          break;
-        }
-      }
-
-      const statusMarker = new google.maps.Marker({
-        position: markerPosition,
-        map: map,
-        icon: {
-          url: iconUrl,
-          scaledSize: new google.maps.Size(32, 32),
-        },
-        title: `Shipment Status: In Transit`,
-      });
-
-      const statusInfo = new google.maps.InfoWindow({
-        content: `<div><strong>Status</strong><br>In Transit</div>`,
-      });
-
-      statusMarker.addListener("click", () => statusInfo.open(map, statusMarker)); // Display info on marker click
-    }
-
-    // Function to place a marker for "Delivered" status at the receiver's location
-    function placeDeliveredMarker(position) {
-      const statusMarker = new google.maps.Marker({
-        position: position,
-        map: map,
-        icon: {
-          url: iconUrl,
-          scaledSize: new google.maps.Size(32, 32),
-        },
-        title: `Shipment Status: Delivered`,
-      });
-
-      const statusInfo = new google.maps.InfoWindow({
-        content: `<div><strong>Status</strong><br>Delivered</div>`,
-      });
-
-      statusMarker.addListener("click", () => statusInfo.open(map, statusMarker)); // Display info on marker click
-    }
   }
 
-  // Function to load the Google Maps API if not already loaded
+  // Function to load the Google Maps API
   async function loadGoogleMapsAPI() {
+    // If already loaded, resolve immediately
     if (window.google && window.google.maps) {
-      googleMapsLoaded = true; // If already loaded, set flag to true
-      return Promise.resolve(); // Resolve promise
+      googleMapsLoaded = true;
+      return Promise.resolve();
     }
+    // Load the Google Maps API script
     if (!googleMapsLoaded) {
       return new Promise((resolve, reject) => {
-        const script = document.createElement('script'); // Create script element to load API
+        const script = document.createElement('script');
         script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`;
-        script.async = true;
+        script.async = true; // Load asynchronously
         script.onload = () => {
-          googleMapsLoaded = true; // Set flag to true once loaded
-          resolve(); // Resolve the promise
+          googleMapsLoaded = true;
+          resolve();
         };
-        script.onerror = () => reject(new Error('Failed to load Google Maps API')); // Reject if there's an error
-        document.head.appendChild(script); // Append script to head to start loading
+        script.onerror = () => reject(new Error('Failed to load Google Maps API'));
+        document.head.appendChild(script);
       });
     }
   }
 
-  // Lifecycle function to load Google Maps API when the component is mounted
+  // Load the Google Maps API when the component is mounted
   onMount(async () => {
     try {
-      await loadGoogleMapsAPI(); // Attempt to load the Google Maps API
+      await loadGoogleMapsAPI();
     } catch (error) {
-      console.error('Failed to load Google Maps API:', error.message); // Log error if API fails to load
+      console.error('Failed to load Google Maps API:', error.message);
     }
   });
 </script>
 
 
-
-
 <Header/>
 
-<main class = "main">
+<main class="main">
   <h1>Track Shipment</h1>
   <div class="track-container">
     <div class="input-group">
@@ -304,6 +272,7 @@
     {/if}
   </div>
 </main>
+
 
 <style>
   /* General Reset */
